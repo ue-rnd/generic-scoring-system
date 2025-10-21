@@ -77,7 +77,7 @@ class ScoringService
         $totalScore = 0;
 
         foreach ($rounds as $round) {
-            $roundScore = $this->getTotalScoreForRound($contestant, $round);
+            $roundScore = $this->getTotalScoreForRound($event, $contestant, $round);
             $totalScore += $roundScore;
         }
 
@@ -99,13 +99,24 @@ class ScoringService
     /**
      * Get total score for a specific round
      */
-    protected function getTotalScoreForRound(Contestant $contestant, $round): float
+    protected function getTotalScoreForRound(Event $event, Contestant $contestant, $round): float
     {
-        $scores = Score::where('contestant_id', $contestant->id)
-            ->where('round_id', $round->id)
-            ->pluck('score');
+        if ($event->scoring_mode === 'boolean') {
+            // For boolean mode, count correct answers and multiply by points per question
+            $correctCount = Score::where('contestant_id', $contestant->id)
+                ->where('round_id', $round->id)
+                ->where('is_correct', true)
+                ->count();
+            
+            return $correctCount * $round->points_per_question;
+        } else {
+            // For manual mode, sum the scores
+            $scores = Score::where('contestant_id', $contestant->id)
+                ->where('round_id', $round->id)
+                ->pluck('score');
 
-        return $scores->sum();
+            return $scores->sum();
+        }
     }
 
     /**
@@ -159,12 +170,26 @@ class ScoringService
                 ->with('judge')
                 ->get();
 
-            $breakdown[] = [
-                'round' => $round,
-                'scores' => $scores,
-                'total_score' => $scores->sum('score'),
-                'max_possible' => $round->max_score,
-            ];
+            if ($event->scoring_mode === 'boolean') {
+                $correctCount = $scores->where('is_correct', true)->count();
+                $totalScore = $correctCount * $round->points_per_question;
+                
+                $breakdown[] = [
+                    'round' => $round,
+                    'scores' => $scores,
+                    'correct_count' => $correctCount,
+                    'total_questions' => $round->total_questions,
+                    'total_score' => $totalScore,
+                    'max_possible' => $round->max_score,
+                ];
+            } else {
+                $breakdown[] = [
+                    'round' => $round,
+                    'scores' => $scores,
+                    'total_score' => $scores->sum('score'),
+                    'max_possible' => $round->max_score,
+                ];
+            }
         }
 
         return $breakdown;

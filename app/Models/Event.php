@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Auth;
 
 class Event extends Model
 {
@@ -13,21 +15,46 @@ class Event extends Model
         'name',
         'description',
         'judging_type',
-        'organizer_id',
+        'scoring_mode',
+        'organization_id',
+        'created_by_user_id',
         'start_date',
         'end_date',
         'is_active',
+        'public_viewing_token',
+        'public_viewing_config',
+        'admin_token',
     ];
 
     protected $casts = [
         'start_date' => 'datetime',
         'end_date' => 'datetime',
         'is_active' => 'boolean',
+        'public_viewing_config' => 'array',
     ];
 
-    public function organizer(): BelongsTo
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
     {
-        return $this->belongsTo(User::class, 'organizer_id');
+        // Apply organization scope for non-super-admin users
+        static::addGlobalScope('organization', function (Builder $builder) {
+            if (Auth::check() && !Auth::user()->isSuperAdmin()) {
+                $organizationIds = Auth::user()->accessibleOrganizationIds();
+                $builder->whereIn('organization_id', $organizationIds);
+            }
+        });
+    }
+
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id');
     }
 
     public function contestants(): HasMany
@@ -60,5 +87,50 @@ class Event extends Model
     public function eventJudges(): HasMany
     {
         return $this->hasMany(EventJudge::class);
+    }
+
+    /**
+     * Generate tokens for the event if not exists
+     */
+    public static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($event) {
+            if (!$event->public_viewing_token) {
+                $event->public_viewing_token = bin2hex(random_bytes(32));
+            }
+            if (!$event->admin_token) {
+                $event->admin_token = bin2hex(random_bytes(32));
+            }
+            // Set default public viewing config
+            if (!$event->public_viewing_config) {
+                $event->public_viewing_config = [
+                    'show_rankings' => true,
+                    'show_scores' => false,
+                    'show_judge_names' => false,
+                    'show_individual_scores' => false,
+                    'show_criteria_breakdown' => false,
+                    'show_round_breakdown' => false,
+                    'show_judge_progress' => true,
+                ];
+            }
+        });
+    }
+
+    /**
+     * Get the public viewing URL
+     */
+    public function getPublicViewingUrlAttribute(): string
+    {
+        return url("/public/event/{$this->public_viewing_token}");
+    }
+
+    /**
+     * Check if a specific viewing option is enabled
+     */
+    public function canShowPublic(string $option): bool
+    {
+        return $this->public_viewing_config[$option] ?? false;
     }
 }

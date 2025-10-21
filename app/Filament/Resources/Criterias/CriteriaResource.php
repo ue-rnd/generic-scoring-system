@@ -19,6 +19,8 @@ class CriteriaResource extends Resource
     protected static ?string $model = Criteria::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function form(Schema $schema): Schema
     {

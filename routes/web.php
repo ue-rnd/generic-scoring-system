@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\Judge\ScoringController;
+use App\Http\Controllers\TokenScoringController;
+use App\Http\Controllers\PublicViewController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -36,7 +38,22 @@ Route::get('/auth/{provider}', [SocialiteController::class, 'redirectToProvider'
 Route::get('/auth/{provider}/callback', [SocialiteController::class, 'handleProviderCallback'])
     ->name('auth.provider.callback');
 
-// Judge Routes (require authentication)
+// Token-based Judge Scoring Routes (No Authentication Required)
+Route::prefix('score')->name('score.')->group(function () {
+    Route::get('/{token}', [TokenScoringController::class, 'showScoringInterface'])->name('judge');
+    Route::post('/{token}', [TokenScoringController::class, 'store'])->name('store');
+    Route::get('/{token}/scores', [TokenScoringController::class, 'getScores'])->name('get');
+    Route::get('/{token}/results', [TokenScoringController::class, 'showResults'])->name('results');
+});
+
+// Public Viewing Routes (No Authentication Required)
+Route::prefix('public')->name('public.')->group(function () {
+    Route::get('/event/{token}', [PublicViewController::class, 'show'])->name('view');
+    Route::get('/event/{token}/live', [PublicViewController::class, 'getLiveResults'])->name('live');
+    Route::get('/event/{token}/contestant/{contestant}', [PublicViewController::class, 'getContestantBreakdown'])->name('contestant');
+});
+
+// Judge Routes (require authentication) - Legacy support
 Route::middleware(['auth'])->group(function () {
     Route::prefix('judge')->name('judge.')->group(function () {
         Route::get('/events', [ScoringController::class, 'index'])->name('events');

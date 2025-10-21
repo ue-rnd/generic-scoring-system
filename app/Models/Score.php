@@ -11,14 +11,17 @@ class Score extends Model
         'event_id',
         'contestant_id',
         'judge_id',
+        'event_judge_id',
         'criteria_id',
         'round_id',
         'score',
+        'is_correct',
         'comments',
     ];
 
     protected $casts = [
         'score' => 'decimal:2',
+        'is_correct' => 'boolean',
     ];
 
     public function event(): BelongsTo
@@ -44,5 +47,10 @@ class Score extends Model
     public function round(): BelongsTo
     {
         return $this->belongsTo(Round::class);
+    }
+
+    public function eventJudge(): BelongsTo
+    {
+        return $this->belongsTo(EventJudge::class);
     }
 }

@@ -26,6 +26,7 @@ class JudgeResource extends Resource
     
     protected static ?string $pluralModelLabel = 'Judges';
     
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function form(Schema $schema): Schema
     {

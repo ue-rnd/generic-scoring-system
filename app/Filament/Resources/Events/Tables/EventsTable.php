@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Events\Tables;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\Action;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -29,9 +30,16 @@ class EventsTable
                         'criteria' => 'Criteria-based',
                         'rounds' => 'Rounds-based',
                     }),
-                TextColumn::make('organizer.name')
+                TextColumn::make('organization.name')
+                    ->label('Organization')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->default('—'),
+                TextColumn::make('creator.name')
+                    ->label('Created By')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('start_date')
                     ->dateTime('M j, Y g:i A')
                     ->sortable(),
@@ -61,6 +69,11 @@ class EventsTable
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('manage_access')
+                    ->label('Manage Links')
+                    ->icon('heroicon-o-link')
+                    ->url(fn ($record) => route('filament.admin.resources.events.manage-access', ['record' => $record]))
+                    ->color('success'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

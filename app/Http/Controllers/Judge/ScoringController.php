@@ -8,6 +8,7 @@ use App\Models\Contestant;
 use App\Models\Score;
 use App\Models\Criteria;
 use App\Models\Round;
+use App\Models\Judge;
 use App\Services\ScoringService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
