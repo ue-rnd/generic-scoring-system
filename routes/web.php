@@ -7,12 +7,17 @@ use App\Http\Controllers\PublicViewController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+// Root is now handled by Filament - redirect to login if not authenticated
 Route::get('/', function () {
-    return view('welcome');
-});
+    if (Auth::check()) {
+        return redirect('/');
+    }
+    return redirect('/login');
+})->middleware('web');
 
+// Custom login route redirects to Filament login
 Route::get('/login', function () {
-    return view('auth.login');
+    return redirect('/login');
 })->name('login');
 
 // Debug route for OAuth testing
@@ -44,6 +49,13 @@ Route::prefix('score')->name('score.')->group(function () {
     Route::post('/{token}', [TokenScoringController::class, 'store'])->name('store');
     Route::get('/{token}/scores', [TokenScoringController::class, 'getScores'])->name('get');
     Route::get('/{token}/results', [TokenScoringController::class, 'showResults'])->name('results');
+});
+
+// Admin Scoring Routes (Token-based, for quiz bee events)
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/score/{token}', [\App\Http\Controllers\AdminScoringController::class, 'show'])->name('score.show');
+    Route::post('/score/{token}', [\App\Http\Controllers\AdminScoringController::class, 'store'])->name('score.store');
+    Route::get('/score/{token}/live', [\App\Http\Controllers\AdminScoringController::class, 'getLive'])->name('score.live');
 });
 
 // Public Viewing Routes (No Authentication Required)

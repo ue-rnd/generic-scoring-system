@@ -14,6 +14,7 @@ class Score extends Model
         'event_judge_id',
         'criteria_id',
         'round_id',
+        'question_number',
         'score',
         'is_correct',
         'comments',

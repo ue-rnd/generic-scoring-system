@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Events;
 
+use App\Filament\Resources\Events\Pages;
 use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ListEvents;
@@ -59,6 +60,7 @@ class EventResource extends Resource
             'create' => CreateEvent::route('/create'),
             'edit' => EditEvent::route('/{record}/edit'),
             'manage-access' => ManageEventAccess::route('/{record}/manage-access'),
+            'score-quiz-bee' => Pages\ScoreQuizBee::route('/{record}/score-quiz-bee'),
         ];
     }
 }

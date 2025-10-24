@@ -1,4 +1,57 @@
 <x-filament-panels::page>
+    {{-- Quiz Bee Scoring Link (Only for rounds-based events) --}}
+    @if($record->isQuizBeeType())
+        <div style="margin-bottom: 1.5rem;">
+            <x-filament::section>
+                <div style="display: flex; align-items: start; gap: 1rem;">
+                    <div style="flex-shrink: 0;">
+                        <x-filament::icon 
+                            icon="heroicon-o-academic-cap" 
+                            style="width: 2rem; height: 2rem;" 
+                            class="text-primary-500" 
+                        />
+                    </div>
+                    <div style="flex: 1;">
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin: 0 0 0.5rem 0;">
+                            Quiz Bee Scoring Access
+                        </h3>
+                        <p style="font-size: 0.875rem; margin-bottom: 1rem; opacity: 0.8;">
+                            This is a quiz bee event. Share the admin scoring URL below with moderators for collaborative scoring.
+                        </p>
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+                            <div style="flex: 1; min-width: 300px;">
+                                <x-filament::input.wrapper>
+                                    <x-filament::input
+                                        type="text"
+                                        value="{{ $record->admin_scoring_url }}"
+                                        readonly
+                                    />
+                                </x-filament::input.wrapper>
+                            </div>
+                            <x-filament::button
+                                color="warning"
+                                icon="heroicon-o-clipboard-document"
+                                x-on:click="
+                                    navigator.clipboard.writeText('{{ $record->admin_scoring_url }}');
+                                    $tooltip('Copied to clipboard!', { timeout: 2000 });
+                                ">
+                                Copy Link
+                            </x-filament::button>
+                            <x-filament::button
+                                tag="a"
+                                href="{{ $record->admin_scoring_url }}"
+                                target="_blank"
+                                color="success"
+                                icon="heroicon-o-arrow-top-right-on-square">
+                                Open Scoring
+                            </x-filament::button>
+                        </div>
+                    </div>
+                </div>
+            </x-filament::section>
+        </div>
+    @endif
+
     {{-- Event Statistics --}}
     <x-filament::section>
         <x-slot name="heading">

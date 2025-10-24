@@ -96,27 +96,56 @@ class PublicViewController extends Controller
      */
     protected function getEventStatistics(Event $event): array
     {
-        $totalJudges = $event->eventJudges()->count();
-        $activeJudges = $event->eventJudges()->where('status', 'accepted')->count();
         $totalContestants = $event->contestants()->count();
         $totalScores = $event->scores()->count();
 
-        if ($event->judging_type === 'criteria') {
-            $criteria = $event->criterias()->count();
-            $totalPossible = $totalJudges * $totalContestants * $criteria;
+        // Different statistics for quiz bee vs judge-based events
+        if ($event->isQuizBeeType()) {
+            // Quiz bee: no judges, count questions instead
+            $totalQuestions = $event->rounds()->sum('total_questions');
+            $totalPossible = $totalContestants * $totalQuestions;
+            
+            // Count unique question scores using raw query
+            $answeredQuestions = \DB::table('scores')
+                ->where('event_id', $event->id)
+                ->whereNotNull('question_number')
+                ->distinct()
+                ->count(\DB::raw('CONCAT(contestant_id, "-", round_id, "-", question_number)'));
+            
+            $completionPercentage = $totalPossible > 0 ? ($answeredQuestions / $totalPossible) * 100 : 0;
+            
+            return [
+                'total_judges' => 0,
+                'active_judges' => 0,
+                'total_contestants' => $totalContestants,
+                'total_scores' => $answeredQuestions,
+                'completion_percentage' => round($completionPercentage, 2),
+                'is_quiz_bee' => true,
+                'total_questions' => $totalQuestions,
+            ];
         } else {
-            $rounds = $event->rounds()->count();
-            $totalPossible = $totalJudges * $totalContestants * $rounds;
+            // Judge-based events
+            $totalJudges = $event->eventJudges()->count();
+            $activeJudges = $event->eventJudges()->where('status', 'accepted')->count();
+
+            if ($event->judging_type === 'criteria') {
+                $criteria = $event->criterias()->count();
+                $totalPossible = $totalJudges * $totalContestants * $criteria;
+            } else {
+                $rounds = $event->rounds()->count();
+                $totalPossible = $totalJudges * $totalContestants * $rounds;
+            }
+
+            $completionPercentage = $totalPossible > 0 ? ($totalScores / $totalPossible) * 100 : 0;
+
+            return [
+                'total_judges' => $totalJudges,
+                'active_judges' => $activeJudges,
+                'total_contestants' => $totalContestants,
+                'total_scores' => $totalScores,
+                'completion_percentage' => round($completionPercentage, 2),
+                'is_quiz_bee' => false,
+            ];
         }
-
-        $completionPercentage = $totalPossible > 0 ? ($totalScores / $totalPossible) * 100 : 0;
-
-        return [
-            'total_judges' => $totalJudges,
-            'active_judges' => $activeJudges,
-            'total_contestants' => $totalContestants,
-            'total_scores' => $totalScores,
-            'completion_percentage' => round($completionPercentage, 2),
-        ];
     }
 }

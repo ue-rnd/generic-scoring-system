@@ -26,8 +26,9 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->path('admin')
+            ->path('') // Root path - Filament is now the main application
             ->login()
+            ->brandName('Generic Scoring System')
             ->colors([
                 'primary' => Color::Amber,
             ])

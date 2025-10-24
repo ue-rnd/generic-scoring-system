@@ -69,6 +69,12 @@ class EventsTable
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('score_quiz_bee')
+                    ->label('Score Event')
+                    ->icon('heroicon-o-clipboard-document-check')
+                    ->url(fn ($record) => route('filament.admin.resources.events.score-quiz-bee', ['record' => $record]))
+                    ->color('primary')
+                    ->visible(fn ($record) => $record->isQuizBeeType()),
                 Action::make('manage_access')
                     ->label('Manage Links')
                     ->icon('heroicon-o-link')

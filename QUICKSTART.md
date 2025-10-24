@@ -12,9 +12,10 @@ php artisan migrate
 php artisan serve
 ```
 
-### Step 3: Access the Admin Panel
-1. Navigate to: `http://localhost:8000/admin`
-2. Login with your admin credentials
+### Step 1: Access the Application
+
+1. Navigate to: `http://localhost:8000`
+2. You'll see the login page
 
 ### Step 4: Create Your First Event
 
@@ -215,8 +216,9 @@ php artisan make:filament-user
 Your generic scoring system is now fully configured and ready for production use!
 
 **Key URLs:**
-- Admin Panel: `/admin`
+- Main Application: `/` (Filament dashboard)
 - Judge Scoring: `/score/{token}` (unique per judge)
+- Admin Scoring: `/admin/score/{token}` (shared for quiz bee)
 - Public Viewing: `/public/event/{token}` (one per event)
 
 **Pro Tips:**

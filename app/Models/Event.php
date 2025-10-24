@@ -133,4 +133,20 @@ class Event extends Model
     {
         return $this->public_viewing_config[$option] ?? false;
     }
+
+    /**
+     * Check if event is quiz bee type (rounds-based)
+     */
+    public function isQuizBeeType(): bool
+    {
+        return $this->judging_type === 'rounds';
+    }
+
+    /**
+     * Get the admin scoring URL for quiz bee events
+     */
+    public function getAdminScoringUrlAttribute(): string
+    {
+        return url("/admin/score/{$this->admin_token}");
+    }
 }

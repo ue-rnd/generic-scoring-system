@@ -62,8 +62,8 @@ return new class extends Migration
             $table->dropForeign(['created_by_user_id']);
             $table->dropColumn(['organization_id', 'created_by_user_id']);
             
-            // Restore organizer_id
-            $table->foreignId('organizer_id')->after('judging_type')->constrained('users')->onDelete('cascade');
+            // Restore organizer_id as nullable to avoid SQLite error
+            $table->foreignId('organizer_id')->nullable()->after('judging_type')->constrained('users')->onDelete('cascade');
         });
 
         Schema::table('contestants', function (Blueprint $table) {

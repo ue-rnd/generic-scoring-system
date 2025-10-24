@@ -26,6 +26,12 @@ class TokenScoringController extends Controller
             ->firstOrFail();
 
         $event = $eventJudge->event;
+        
+        // Redirect quiz bee events to admin scoring URL
+        if ($event->isQuizBeeType()) {
+            return view('scoring.quiz-bee-redirect', compact('event'));
+        }
+        
         $contestants = $event->contestants;
         $criterias = $event->criterias;
         $rounds = $event->rounds;

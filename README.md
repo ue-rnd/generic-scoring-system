@@ -103,7 +103,7 @@ A comprehensive, **token-based** scoring system built with Laravel and Filament 
    php artisan serve
    ```
 
-Visit `/admin` to access the admin panel.
+Visit `http://localhost:8000` to access the application.
 
 ## 🚀 Quick Start (5 Minutes)
 
@@ -121,7 +121,7 @@ See [QUICKSTART.md](QUICKSTART.md) for a complete walkthrough from zero to your 
 
 ### For Event Organizers
 
-1. **Access Admin Panel**: Visit `/admin` and login
+1. **Access Application**: Visit the root URL and login
 2. **Create Event**: 
    - Go to Events → Create Event
    - Choose judging type (Criteria-based or Rounds-based)
@@ -175,11 +175,13 @@ See [QUICKSTART.md](QUICKSTART.md) for a complete walkthrough from zero to your 
 ### Key URLs
 
 ```
-/admin                                    - Admin panel (Filament)
-/admin/resources/events/{id}/manage-access - Link management dashboard
+/                                         - Main application (Filament)
+/resources/events/{id}/manage-access     - Link management dashboard
 
 /score/{token}                            - Judge scoring interface (no auth)
 /score/{token}/results                    - Judge results view (no auth)
+
+/admin/score/{token}                      - Admin scoring for Quiz Bee (shared access)
 
 /public/event/{token}                     - Public viewing page (no auth)
 /public/event/{token}/live                - Live results API (JSON)
@@ -280,9 +282,10 @@ Final Score = Σ(round_scores)
 - `GET /public/event/{token}/contestant/{id}` - Detailed breakdown
 
 ### Admin Panel (Filament - Authentication Required)
-- `/admin` - Dashboard
-- `/admin/resources/events` - Event management
-- `/admin/resources/events/{id}/manage-access` - Link management
+- `/` - Main application dashboard
+- `/resources/events` - Event management
+- `/resources/events/{id}/manage-access` - Link management
+- `/resources/events/{id}/score-quiz-bee` - Quiz bee scoring interface
 
 ### Legacy Judge Interface (Authentication Required - Preserved)
 - `GET /judge/events` - List assigned events

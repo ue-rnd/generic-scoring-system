@@ -101,19 +101,38 @@ class ScoringService
      */
     protected function getTotalScoreForRound(Event $event, Contestant $contestant, $round): float
     {
+        // Check if this is a quiz bee event (no judge_id, question-level scoring)
+        $isQuizBee = $event->isQuizBeeType();
+        
         if ($event->scoring_mode === 'boolean') {
             // For boolean mode, count correct answers and multiply by points per question
-            $correctCount = Score::where('contestant_id', $contestant->id)
+            $query = Score::where('contestant_id', $contestant->id)
                 ->where('round_id', $round->id)
-                ->where('is_correct', true)
-                ->count();
+                ->where('is_correct', true);
+            
+            if ($isQuizBee) {
+                // Quiz bee: count unique question numbers marked correct
+                $correctCount = $query->whereNotNull('question_number')
+                    ->distinct('question_number')
+                    ->count('question_number');
+            } else {
+                // Judge-based: count correct marks from judges
+                $correctCount = $query->count();
+            }
             
             return $correctCount * $round->points_per_question;
         } else {
             // For manual mode, sum the scores
-            $scores = Score::where('contestant_id', $contestant->id)
-                ->where('round_id', $round->id)
-                ->pluck('score');
+            $query = Score::where('contestant_id', $contestant->id)
+                ->where('round_id', $round->id);
+            
+            if ($isQuizBee) {
+                // Quiz bee: sum scores for each question (should be one per question per contestant)
+                $scores = $query->whereNotNull('question_number')->pluck('score');
+            } else {
+                // Judge-based: sum scores from judges
+                $scores = $query->pluck('score');
+            }
 
             return $scores->sum();
         }
@@ -163,15 +182,29 @@ class ScoringService
     {
         $breakdown = [];
         $rounds = $event->rounds;
+        $isQuizBee = $event->isQuizBeeType();
 
         foreach ($rounds as $round) {
-            $scores = Score::where('contestant_id', $contestant->id)
-                ->where('round_id', $round->id)
-                ->with('judge')
-                ->get();
+            $query = Score::where('contestant_id', $contestant->id)
+                ->where('round_id', $round->id);
+            
+            if (!$isQuizBee) {
+                $query->with('judge');
+            }
+            
+            $scores = $query->get();
 
             if ($event->scoring_mode === 'boolean') {
-                $correctCount = $scores->where('is_correct', true)->count();
+                if ($isQuizBee) {
+                    // Quiz bee: count questions marked correct
+                    $correctCount = $scores->where('is_correct', true)
+                        ->whereNotNull('question_number')
+                        ->count();
+                } else {
+                    // Judge-based: count correct marks from judges
+                    $correctCount = $scores->where('is_correct', true)->count();
+                }
+                
                 $totalScore = $correctCount * $round->points_per_question;
                 
                 $breakdown[] = [
@@ -200,6 +233,11 @@ class ScoringService
      */
     public function getJudgeScoringSummary(Event $event): Collection
     {
+        // Skip judge summary for quiz bee events (they don't have individual judges)
+        if ($event->isQuizBeeType()) {
+            return collect();
+        }
+        
         $judges = $event->judges;
         $summary = collect();
 
