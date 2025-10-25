@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class JudgeResource extends Resource
 {
@@ -27,6 +28,24 @@ class JudgeResource extends Resource
     protected static ?string $pluralModelLabel = 'Judges';
     
     protected static bool $shouldRegisterNavigation = false;
+    
+    /**
+     * Scope the query to only show judges from the user's organizations
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        
+        $user = auth()->user();
+        
+        // Super admins can see all judges
+        if ($user->isSuperAdmin()) {
+            return $query;
+        }
+        
+        // Other users can only see judges from their organizations
+        return $query->whereIn('organization_id', $user->accessibleOrganizationIds());
+    }
 
     public static function form(Schema $schema): Schema
     {

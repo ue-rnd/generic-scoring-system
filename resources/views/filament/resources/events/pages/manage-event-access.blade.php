@@ -1,242 +1,379 @@
 <x-filament-panels::page>
-    {{-- Quiz Bee Scoring Link (Only for rounds-based events) --}}
-    @if($record->isQuizBeeType())
-        <div style="margin-bottom: 1.5rem;">
-            <x-filament::section>
-                <div style="display: flex; align-items: start; gap: 1rem;">
-                    <div style="flex-shrink: 0;">
-                        <x-filament::icon 
-                            icon="heroicon-o-academic-cap" 
-                            style="width: 2rem; height: 2rem;" 
-                            class="text-primary-500" 
-                        />
-                    </div>
-                    <div style="flex: 1;">
-                        <h3 style="font-size: 1.125rem; font-weight: 700; margin: 0 0 0.5rem 0;">
-                            Quiz Bee Scoring Access
-                        </h3>
-                        <p style="font-size: 0.875rem; margin-bottom: 1rem; opacity: 0.8;">
-                            This is a quiz bee event. Share the admin scoring URL below with moderators for collaborative scoring.
-                        </p>
-                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
-                            <div style="flex: 1; min-width: 300px;">
-                                <x-filament::input.wrapper>
-                                    <x-filament::input
-                                        type="text"
-                                        value="{{ $record->admin_scoring_url }}"
-                                        readonly
-                                    />
-                                </x-filament::input.wrapper>
-                            </div>
-                            <x-filament::button
-                                color="warning"
-                                icon="heroicon-o-clipboard-document"
-                                x-on:click="
-                                    navigator.clipboard.writeText('{{ $record->admin_scoring_url }}');
-                                    $tooltip('Copied to clipboard!', { timeout: 2000 });
-                                ">
-                                Copy Link
-                            </x-filament::button>
-                            <x-filament::button
-                                tag="a"
-                                href="{{ $record->admin_scoring_url }}"
-                                target="_blank"
-                                color="success"
-                                icon="heroicon-o-arrow-top-right-on-square">
-                                Open Scoring
-                            </x-filament::button>
-                        </div>
-                    </div>
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        @media (min-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (min-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        .stat-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .stat-icon-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.5rem;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        .stat-icon {
+            width: 1.5rem;
+            height: 1.5rem;
+            color: #3B82F6;
+        }
+        .stat-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6B7280;
+            margin: 0;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .section-spacing {
+            margin-bottom: 1.5rem;
+        }
+        .link-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .link-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .link-input-container {
+            flex: 1;
+        }
+        .link-description {
+            font-size: 0.875rem;
+            color: #6B7280;
+            margin: 0;
+        }
+        .judge-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .judge-item {
+            padding: 1rem;
+            border: 1px solid #E5E7EB;
+            border-radius: 0.5rem;
+        }
+        .judge-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+        .judge-name {
+            font-weight: 500;
+            margin: 0;
+        }
+        .judge-scores {
+            font-size: 0.875rem;
+            color: #6B7280;
+            margin: 0;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+        .empty-icon {
+            width: 3rem;
+            height: 3rem;
+            margin: 0 auto 0.5rem;
+            color: #9CA3AF;
+        }
+        .empty-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin: 0.5rem 0 0.25rem;
+        }
+        .empty-text {
+            font-size: 0.875rem;
+            color: #6B7280;
+            margin: 0;
+        }
+        .heading-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+    </style>
+
+    <!-- Event Statistics -->
+    <div class="stats-grid">
+        <x-filament::section>
+            <div class="stat-content">
+                <div class="stat-icon-wrapper">
+                    <x-filament::icon 
+                        icon="heroicon-o-users" 
+                        style="width: 1.5rem; height: 1.5rem; color: #3B82F6;"
+                    />
                 </div>
-            </x-filament::section>
+                <div>
+                    <p class="stat-label">Total Judges</p>
+                    <p class="stat-value">{{ $statistics['total_judges'] ?? 0 }}</p>
+                </div>
+            </div>
+        </x-filament::section>
+
+        <x-filament::section>
+            <div class="stat-content">
+                <div class="stat-icon-wrapper">
+                    <x-filament::icon 
+                        icon="heroicon-o-user-group" 
+                        style="width: 1.5rem; height: 1.5rem; color: #3B82F6;"
+                    />
+                </div>
+                <div>
+                    <p class="stat-label">Contestants</p>
+                    <p class="stat-value">{{ $statistics['total_contestants'] ?? 0 }}</p>
+                </div>
+            </div>
+        </x-filament::section>
+
+        <x-filament::section>
+            <div class="stat-content">
+                <div class="stat-icon-wrapper">
+                    <x-filament::icon 
+                        icon="heroicon-o-clipboard-document-check" 
+                        style="width: 1.5rem; height: 1.5rem; color: #3B82F6;"
+                    />
+                </div>
+                <div>
+                    <p class="stat-label">Completion</p>
+                    <p class="stat-value">{{ $statistics['completion_percentage'] ?? 0 }}%</p>
+                </div>
+            </div>
+        </x-filament::section>
+
+        <x-filament::section>
+            <div class="stat-content">
+                <div class="stat-icon-wrapper">
+                    <x-filament::icon 
+                        icon="heroicon-o-eye" 
+                        style="width: 1.5rem; height: 1.5rem; color: #3B82F6;"
+                    />
+                </div>
+                <div>
+                    <p class="stat-label">Status</p>
+                    <p style="font-size: 1.125rem; font-weight: 600; color: {{ $record->is_active ? '#10B981' : '#6B7280' }}; margin: 0;">
+                        {{ $record->is_active ? 'Active' : 'Inactive' }}
+                    </p>
+                </div>
+            </div>
+        </x-filament::section>
+    </div>
+
+    <!-- Public Viewing Link -->
+    <x-filament::section class="section-spacing">
+        <x-slot name="heading">
+            <div class="heading-row">
+                <span>Public Viewing Link</span>
+                <x-filament::button
+                    color="warning"
+                    size="sm"
+                    wire:click="regeneratePublicToken"
+                    wire:confirm="Are you sure? This will invalidate the current public link."
+                >
+                    Regenerate Token
+                </x-filament::button>
+            </div>
+        </x-slot>
+
+        <div class="link-container">
+            <div class="link-row">
+                <div class="link-input-container">
+                    <x-filament::input.wrapper>
+                        <x-filament::input
+                            type="text"
+                            readonly
+                            value="{{ $publicViewingLink['url'] ?? '' }}"
+                            style="font-family: monospace; font-size: 0.875rem;"
+                        />
+                    </x-filament::input.wrapper>
+                </div>
+                <x-filament::button
+                    color="gray"
+                    wire:click="copyToClipboard('{{ $publicViewingLink['url'] ?? '' }}')"
+                >
+                    <x-filament::icon icon="heroicon-o-clipboard" style="width: 1rem; height: 1rem;" />
+                    Copy
+                </x-filament::button>
+                <x-filament::button
+                    color="primary"
+                    tag="a"
+                    href="{{ $publicViewingLink['url'] ?? '#' }}"
+                    target="_blank"
+                >
+                    <x-filament::icon icon="heroicon-o-arrow-top-right-on-square" style="width: 1rem; height: 1rem;" />
+                    Open
+                </x-filament::button>
+            </div>
+            <p class="link-description">
+                Share this link with your audience to allow them to view the live scoreboard.
+            </p>
         </div>
+    </x-filament::section>
+
+    <!-- Admin Scoring Link (for Quiz Bee events) -->
+    @if($record->isQuizBeeType())
+    <x-filament::section class="section-spacing">
+        <x-slot name="heading">
+            Admin Scoring Link
+        </x-slot>
+
+        <div class="link-container">
+            <div class="link-row">
+                <div class="link-input-container">
+                    <x-filament::input.wrapper>
+                        <x-filament::input
+                            type="text"
+                            readonly
+                            value="{{ $record->admin_scoring_url }}"
+                            style="font-family: monospace; font-size: 0.875rem;"
+                        />
+                    </x-filament::input.wrapper>
+                </div>
+                <x-filament::button
+                    color="gray"
+                    wire:click="copyToClipboard('{{ $record->admin_scoring_url }}')"
+                >
+                    <x-filament::icon icon="heroicon-o-clipboard" style="width: 1rem; height: 1rem;" />
+                    Copy
+                </x-filament::button>
+                <x-filament::button
+                    color="primary"
+                    tag="a"
+                    href="{{ $record->admin_scoring_url }}"
+                    target="_blank"
+                >
+                    <x-filament::icon icon="heroicon-o-arrow-top-right-on-square" style="width: 1rem; height: 1rem;" />
+                    Open
+                </x-filament::button>
+            </div>
+            <p class="link-description">
+                Use this link to access the centralized quiz bee scoring interface.
+            </p>
+        </div>
+    </x-filament::section>
     @endif
 
-    {{-- Event Statistics --}}
+    <!-- Judge Links -->
+    @if(!$record->isQuizBeeType())
     <x-filament::section>
         <x-slot name="heading">
-            Event Statistics
+            <div class="heading-row">
+                <span>Judge Scoring Links</span>
+                <x-filament::button
+                    color="warning"
+                    size="sm"
+                    wire:click="regenerateJudgeTokens"
+                    wire:confirm="Are you sure? This will invalidate all existing judge links."
+                >
+                    Regenerate All Tokens
+                </x-filament::button>
+            </div>
         </x-slot>
-        
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
-            <div>
-                <div style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 0.5rem;">Total Judges</div>
-                <div style="font-size: 2rem; font-weight: bold; margin-bottom: 0.25rem;">{{ $statistics['total_judges'] }}</div>
-                <div style="font-size: 0.75rem; color: var(--gray-500);">{{ $statistics['active_judges'] }} active, {{ $statistics['pending_judges'] }} pending</div>
-            </div>
-            
-            <div>
-                <div style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 0.5rem;">Contestants</div>
-                <div style="font-size: 2rem; font-weight: bold;">{{ $statistics['total_contestants'] }}</div>
-            </div>
-            
-            <div>
-                <div style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 0.5rem;">Completion</div>
-                <div style="font-size: 2rem; font-weight: bold; margin-bottom: 0.25rem;">{{ number_format($statistics['completion_percentage'], 1) }}%</div>
-                <div style="font-size: 0.75rem; color: var(--gray-500);">{{ $statistics['total_scores'] }} scores submitted</div>
-            </div>
-        </div>
-    </x-filament::section>
 
-    {{-- Public Viewing Link --}}
-    <x-filament::section>
-        <x-slot name="heading">
-            Public Viewing Link
-        </x-slot>
-        
-        <x-slot name="description">
-            Share this link with your audience to view live results
-        </x-slot>
-        
-        <x-slot name="headerEnd">
-            <x-filament::button
-                color="warning"
-                size="sm"
-                wire:click="regeneratePublicToken"
-                wire:confirm="Are you sure? This will invalidate the current public link."
-            >
-                Regenerate Token
-            </x-filament::button>
-        </x-slot>
-        
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-start;">
-            <div style="flex: 1; min-width: 300px;">
-                <x-filament::input.wrapper>
-                    <x-filament::input
-                        type="text"
-                        value="{{ $publicViewingLink['url'] }}"
-                        readonly
-                    />
-                </x-filament::input.wrapper>
-            </div>
-            
-            <x-filament::button
-                wire:click="copyToClipboard('{{ $publicViewingLink['url'] }}')"
-                outlined
-            >
-                <x-filament::icon
-                    icon="heroicon-m-clipboard-document"
-                    class="h-5 w-5"
+        @if(count($judgeLinks) === 0)
+            <div class="empty-state">
+                <x-filament::icon 
+                    icon="heroicon-o-users" 
+                    style="width: 3rem; height: 3rem; margin: 0 auto; color: #9CA3AF;"
                 />
-                Copy Link
-            </x-filament::button>
-        </div>
-        
-        <div style="margin-top: 1.5rem;">
-            <img 
-                src="{{ $publicViewingLink['qr_code_url'] }}" 
-                alt="Public Viewing QR Code" 
-                style="width: 100%; height: auto; max-width: 200px; border-radius: 0.5rem; border: 1px solid var(--gray-200);"
-            />
-        </div>
-    </x-filament::section>
-
-    {{-- Judge Links --}}
-    <x-filament::section>
-        <x-slot name="heading">
-            Judge Scoring Links
-        </x-slot>
-        
-        <x-slot name="description">
-            Individual scoring links for each judge with unique access tokens
-        </x-slot>
-        
-        <x-slot name="headerEnd">
-            <x-filament::button
-                color="warning"
-                size="sm"
-                wire:click="regenerateJudgeTokens"
-                wire:confirm="Are you sure? This will invalidate all current judge links."
-            >
-                Regenerate All Tokens
-            </x-filament::button>
-        </x-slot>
-        
-        @if (count($judgeLinks) === 0)
-            <div style="text-align: center; padding: 3rem 0;">
-                <x-filament::icon
-                    icon="heroicon-o-user-group"
-                    style="width: 3rem; height: 3rem; margin: 0 auto 1rem; color: var(--gray-400);"
-                />
-                <div style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">No judges added yet</div>
-                <div style="font-size: 0.875rem; color: var(--gray-500);">Click "Add Judges" button above to get started</div>
+                <h3 class="empty-title">No judges</h3>
+                <p class="empty-text">
+                    Get started by adding judges to this event.
+                </p>
             </div>
         @else
-            @foreach ($judgeLinks as $judge)
-                <x-filament::card style="margin-bottom: 1rem;">
-                    <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
-                        <div style="flex-shrink: 0;">
-                            <img 
-                                src="{{ $judge['qr_code_url'] }}" 
-                                alt="QR Code for {{ $judge['judge_name'] }}" 
-                                style="width: 120px; height: 120px; border-radius: 0.5rem; border: 1px solid var(--gray-200);"
-                            />
+            <div class="judge-list">
+                @foreach($judgeLinks as $judge)
+                <div class="judge-item">
+                    <div class="judge-header">
+                        <div>
+                            <h4 class="judge-name">
+                                {{ $judge['name'] ?? 'Judge #' . $judge['id'] }}
+                            </h4>
+                            <p class="judge-scores">
+                                Scores submitted: {{ $judge['scores_count'] ?? 0 }}
+                            </p>
                         </div>
-                        
-                        <div style="flex: 1; min-width: 300px;">
-                            <div style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">
-                                {{ $judge['judge_name'] }}
-                            </div>
-                            
-                            <div style="margin-bottom: 1rem;">
-                                <x-filament::badge 
-                                    :color="$judge['status'] === 'accepted' ? 'success' : 'gray'"
-                                >
-                                    {{ ucfirst($judge['status']) }}
-                                </x-filament::badge>
-                            </div>
-                            
-                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <div style="flex: 1; min-width: 250px;">
-                                    <x-filament::input.wrapper>
-                                        <x-filament::input
-                                            type="text"
-                                            value="{{ $judge['url'] }}"
-                                            readonly
-                                            style="font-family: ui-monospace, monospace; font-size: 0.875rem;"
-                                        />
-                                    </x-filament::input.wrapper>
-                                </div>
-                                
-                                <x-filament::button
-                                    size="sm"
-                                    wire:click="copyToClipboard('{{ $judge['url'] }}')"
-                                    outlined
-                                >
-                                    <x-filament::icon
-                                        icon="heroicon-m-clipboard-document"
-                                        class="h-4 w-4"
-                                    />
-                                    Copy
-                                </x-filament::button>
-                            </div>
-                        </div>
-                        
-                        <div style="flex-shrink: 0; display: flex; align-items: flex-start;">
-                            <x-filament::button
-                                color="danger"
-                                size="sm"
-                                wire:click="deleteJudge({{ $judge['id'] }})"
-                                wire:confirm="Are you sure you want to remove this judge?"
-                            >
-                                <x-filament::icon
-                                    icon="heroicon-m-trash"
-                                    class="h-4 w-4"
-                                />
-                                Remove
-                            </x-filament::button>
-                        </div>
+                        <x-filament::button
+                            color="danger"
+                            size="sm"
+                            wire:click="deleteJudge({{ $judge['id'] }})"
+                            wire:confirm="Are you sure you want to remove this judge?"
+                        >
+                            <x-filament::icon icon="heroicon-o-trash" style="width: 1rem; height: 1rem;" />
+                            Remove
+                        </x-filament::button>
                     </div>
-                </x-filament::card>
-            @endforeach
+                    <div class="link-row">
+                        <div class="link-input-container">
+                            <x-filament::input.wrapper>
+                                <x-filament::input
+                                    type="text"
+                                    readonly
+                                    value="{{ $judge['url'] }}"
+                                    style="font-family: monospace; font-size: 0.875rem;"
+                                />
+                            </x-filament::input.wrapper>
+                        </div>
+                        <x-filament::button
+                            color="gray"
+                            wire:click="copyToClipboard('{{ $judge['url'] }}')"
+                        >
+                            <x-filament::icon icon="heroicon-o-clipboard" style="width: 1rem; height: 1rem;" />
+                            Copy
+                        </x-filament::button>
+                        <x-filament::button
+                            color="primary"
+                            tag="a"
+                            href="{{ $judge['url'] }}"
+                            target="_blank"
+                        >
+                            <x-filament::icon icon="heroicon-o-arrow-top-right-on-square" style="width: 1rem; height: 1rem;" />
+                            Open
+                        </x-filament::button>
+                    </div>
+                </div>
+                @endforeach
+            </div>
         @endif
     </x-filament::section>
+    @endif
 
     @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            window.addEventListener('copy-to-clipboard', event => {
-                navigator.clipboard.writeText(event.detail.text);
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('copy-to-clipboard', (event) => {
+                const text = event.text;
+                navigator.clipboard.writeText(text).then(() => {
+                    console.log('Copied to clipboard');
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                });
             });
         });
     </script>

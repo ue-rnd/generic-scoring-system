@@ -29,7 +29,7 @@ class TokenScoringController extends Controller
         
         // Redirect quiz bee events to admin scoring URL
         if ($event->isQuizBeeType()) {
-            return view('scoring.quiz-bee-redirect', compact('event'));
+            return view('scoring.quiz-bee-info', compact('event'));
         }
         
         $contestants = $event->contestants;
@@ -45,7 +45,7 @@ class TokenScoringController extends Controller
                 return $score->contestant_id . '_' . ($score->criteria_id ?? $score->round_id);
             });
 
-        return view('scoring.judge', compact(
+        return view('scoring.pageant-judge-scoring', compact(
             'event',
             'eventJudge',
             'contestants',
@@ -162,6 +162,6 @@ class TokenScoringController extends Controller
         $judgeSummary = $this->scoringService->getJudgeScoringSummary($event);
         $judgeName = $eventJudge->display_name;
 
-        return view('scoring.results', compact('event', 'results', 'judgeSummary', 'judgeName', 'token'));
+        return view('scoring.judge-results', compact('event', 'results', 'judgeSummary', 'judgeName', 'token'));
     }
 }

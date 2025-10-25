@@ -7,36 +7,10 @@ use App\Http\Controllers\PublicViewController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// Root is now handled by Filament - redirect to login if not authenticated
-Route::get('/', function () {
-    if (Auth::check()) {
-        return redirect('/');
-    }
-    return redirect('/login');
-})->middleware('web');
-
-// Custom login route redirects to Filament login
-Route::get('/login', function () {
-    return redirect('/login');
-})->name('login');
+// Filament handles root (/) and /login routes automatically
+// No need to define custom routes for these paths
 
 // Debug route for OAuth testing
-Route::get('/debug-oauth', function () {
-    $config = [
-        'google_client_id' => config('services.google.client_id'),
-        'google_redirect_uri' => config('services.google.redirect'),
-        'app_url' => config('app.url'),
-    ];
-    
-    return response()->json($config);
-});
-
-Route::post('/logout', function () {
-    Auth::logout();
-    return redirect('/login');
-})->name('logout');
-
-// Social Authentication Routes
 Route::get('/auth/{provider}', [SocialiteController::class, 'redirectToProvider'])
     ->name('auth.provider');
     

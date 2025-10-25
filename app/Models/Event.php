@@ -143,6 +143,14 @@ class Event extends Model
     }
 
     /**
+     * Check if event is criteria-based (pageant)
+     */
+    public function isCriteriaBased(): bool
+    {
+        return $this->judging_type === 'criteria';
+    }
+
+    /**
      * Get the admin scoring URL for quiz bee events
      */
     public function getAdminScoringUrlAttribute(): string

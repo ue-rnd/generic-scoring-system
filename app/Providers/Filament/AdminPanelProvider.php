@@ -28,6 +28,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('') // Root path - Filament is now the main application
             ->login()
+            ->profile()
             ->brandName('Generic Scoring System')
             ->colors([
                 'primary' => Color::Amber,
@@ -40,7 +41,11 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 AccountWidget::class,
-                FilamentInfoWidget::class,
+                // Only show FilamentInfoWidget in local development
+                ...config('app.env') === 'local' ? [FilamentInfoWidget::class] : [],
+                // Custom widgets
+                \App\Filament\Widgets\MyOrganizations::class,
+                \App\Filament\Widgets\RecentEvents::class,
             ])
             ->middleware([
                 EncryptCookies::class,

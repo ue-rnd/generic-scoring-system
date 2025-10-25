@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class CriteriaResource extends Resource
 {
@@ -21,6 +22,24 @@ class CriteriaResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
     
     protected static bool $shouldRegisterNavigation = false;
+    
+    /**
+     * Scope the query to only show criteria from the user's organizations
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        
+        $user = auth()->user();
+        
+        // Super admins can see all criteria
+        if ($user->isSuperAdmin()) {
+            return $query;
+        }
+        
+        // Other users can only see criteria from their organizations
+        return $query->whereIn('organization_id', $user->accessibleOrganizationIds());
+    }
 
     public static function form(Schema $schema): Schema
     {

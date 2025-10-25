@@ -17,12 +17,15 @@ class EventForm
     {
         return $schema
             ->components([
+                // Basic Information
                 TextInput::make('name')
+                    ->label('Event Name')
                     ->required()
                     ->maxLength(255)
                     ->columnSpanFull(),
                 
                 Textarea::make('description')
+                    ->label('Description')
                     ->columnSpanFull()
                     ->rows(3),
                 
@@ -43,30 +46,36 @@ class EventForm
                     ->helperText('Select the organization that owns this event'),
                 
                 Toggle::make('is_active')
-                    ->default(true)
-                    ->label('Active'),
+                    ->label('Active')
+                    ->default(true),
                 
+                // Event Schedule
                 DateTimePicker::make('start_date')
+                    ->label('Start Date')
                     ->required()
                     ->native(false),
                 
                 DateTimePicker::make('end_date')
+                    ->label('End Date')
                     ->required()
                     ->native(false)
                     ->after('start_date'),
                 
+                // Event Type & Scoring Configuration
                 Select::make('judging_type')
+                    ->label('Judging Type')
                     ->options([
                         'criteria' => 'Criteria-based (e.g., Beauty Pageants)',
                         'rounds' => 'Rounds-based (e.g., Quiz Bees)',
                     ])
                     ->required()
-                    ->reactive()
+                    ->live()
                     ->native(false)
-                    ->helperText('Criteria-based: Judges score contestants on multiple criteria. Rounds-based: Contestants compete in multiple rounds/categories.')
+                    ->helperText('Criteria-based: Judges score contestants on multiple criteria. Rounds-based: Contestants compete in multiple rounds.')
                     ->columnSpanFull(),
                 
                 Select::make('scoring_mode')
+                    ->label('Scoring Mode (Quiz Bee Only)')
                     ->options([
                         'manual' => 'Manual Score Entry',
                         'boolean' => 'Correct/Incorrect (Auto-calculate)',
@@ -75,43 +84,57 @@ class EventForm
                     ->required()
                     ->native(false)
                     ->visible(fn ($get) => $get('judging_type') === 'rounds')
-                    ->helperText('Boolean mode: Mark answers as correct/incorrect and points are auto-calculated. Manual mode: Enter scores directly.')
+                    ->helperText('Boolean: Mark answers as correct/incorrect. Manual: Enter scores directly.')
                     ->columnSpanFull(),
                 
-                // Public Viewing Settings
+                // Public Viewing Options
                 Toggle::make('public_viewing_config.show_rankings')
                     ->label('Public: Show Rankings')
                     ->default(true)
-                    ->helperText('Display contestant rankings on public page'),
+                    ->live()
+                    ->helperText('Display contestant rankings on public scoreboard'),
                 
                 Toggle::make('public_viewing_config.show_scores')
                     ->label('Public: Show Final Scores')
-                    ->default(false),
+                    ->default(false)
+                    ->live()
+                    ->helperText('Display the actual score values'),
                 
                 Toggle::make('public_viewing_config.show_judge_names')
-                    ->label('Public: Show Judge Names')
-                    ->default(false),
+                    ->label('Public: Show Judge Names (Pageant)')
+                    ->default(false)
+                    ->live()
+                    ->visible(fn ($get) => $get('judging_type') === 'criteria')
+                    ->helperText('Display names of judges'),
                 
                 Toggle::make('public_viewing_config.show_individual_scores')
-                    ->label('Public: Show Individual Judge Scores')
-                    ->default(false),
+                    ->label('Public: Show Individual Judge Scores (Pageant)')
+                    ->default(false)
+                    ->live()
+                    ->visible(fn ($get) => $get('judging_type') === 'criteria')
+                    ->helperText('Display scores from each judge separately'),
                 
                 Toggle::make('public_viewing_config.show_criteria_breakdown')
-                    ->label('Public: Show Criteria Breakdown')
+                    ->label('Public: Show Criteria Breakdown (Pageant)')
                     ->default(false)
-                    ->visible(fn ($get) => $get('judging_type') === 'criteria'),
+                    ->live()
+                    ->visible(fn ($get) => $get('judging_type') === 'criteria')
+                    ->helperText('Display scores for each criterion'),
                 
                 Toggle::make('public_viewing_config.show_round_breakdown')
-                    ->label('Public: Show Round Breakdown')
+                    ->label('Public: Show Round Breakdown (Quiz Bee)')
                     ->default(false)
-                    ->visible(fn ($get) => $get('judging_type') === 'rounds'),
+                    ->live()
+                    ->visible(fn ($get) => $get('judging_type') === 'rounds')
+                    ->helperText('Display scores for each round'),
                 
                 Toggle::make('public_viewing_config.show_judge_progress')
-                    ->label('Public: Show Judge Progress')
-                    ->default(true),
+                    ->label('Public: Show Judge Progress (Pageant)')
+                    ->default(true)
+                    ->live()
+                    ->visible(fn ($get) => $get('judging_type') === 'criteria')
+                    ->helperText('Display completion status of each judge'),
             ])
             ->columns(2);
     }
 }
-
-

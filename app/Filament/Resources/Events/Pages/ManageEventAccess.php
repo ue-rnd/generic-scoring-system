@@ -49,8 +49,11 @@ class ManageEventAccess extends ViewRecord
 
     protected function getHeaderActions(): array
     {
-        return [
-            Action::make('addJudges')
+        $actions = [];
+        
+        // Only show Add Judges action for criteria-based events
+        if ($this->record->judging_type === 'criteria') {
+            $actions[] = Action::make('addJudges')
                 ->label('Add Judges')
                 ->icon('heroicon-o-plus')
                 ->form([
@@ -89,13 +92,15 @@ class ManageEventAccess extends ViewRecord
                         ->title('Judges Added')
                         ->success()
                         ->send();
-                }),
-                
-            Action::make('refreshData')
-                ->label('Refresh')
-                ->icon('heroicon-o-arrow-path')
-                ->action(fn () => $this->loadData()),
-        ];
+                });
+        }
+        
+        $actions[] = Action::make('refreshData')
+            ->label('Refresh')
+            ->icon('heroicon-o-arrow-path')
+            ->action(fn () => $this->loadData());
+        
+        return $actions;
     }
 
     public function copyToClipboard(string $text): void

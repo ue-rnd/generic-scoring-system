@@ -38,7 +38,7 @@ class AdminScoringController extends Controller
                 });
             });
         
-        return view('admin.scoring.quiz-bee', compact('event', 'existingScores'));
+        return view('scoring.quiz-bee-scoring', compact('event', 'existingScores'));
     }
 
     /**
@@ -52,17 +52,28 @@ class AdminScoringController extends Controller
             abort(403, 'This scoring interface is only for quiz bee events.');
         }
 
-        $validated = $request->validate([
-            'scores' => 'required|array',
-            'scores.*.contestant_id' => 'required|exists:contestants,id',
-            'scores.*.round_id' => 'required|exists:rounds,id',
-            'scores.*.question_number' => 'required|integer|min:1',
-            'scores.*.is_correct' => 'nullable|boolean',
-            'scores.*.score' => 'nullable|numeric|min:0',
-        ]);
+        // The form submits: scores[contestantId_roundId_questionNum][field] = value
+        // We need to restructure this data
+        $scoresInput = $request->input('scores', []);
+        $processedScores = [];
+        
+        foreach ($scoresInput as $key => $scoreData) {
+            // Skip if no data
+            if (empty($scoreData['contestant_id']) || empty($scoreData['round_id']) || empty($scoreData['question_number'])) {
+                continue;
+            }
+            
+            $processedScores[] = [
+                'contestant_id' => $scoreData['contestant_id'],
+                'round_id' => $scoreData['round_id'],
+                'question_number' => $scoreData['question_number'],
+                'is_correct' => $scoreData['is_correct'] ?? null,
+                'score' => $scoreData['score'] ?? null,
+            ];
+        }
 
-        DB::transaction(function () use ($event, $validated) {
-            foreach ($validated['scores'] as $scoreData) {
+        DB::transaction(function () use ($event, $processedScores) {
+            foreach ($processedScores as $scoreData) {
                 $data = [
                     'event_id' => $event->id,
                     'contestant_id' => $scoreData['contestant_id'],
@@ -72,7 +83,7 @@ class AdminScoringController extends Controller
 
                 // Determine scoring based on mode
                 if ($event->scoring_mode === 'boolean') {
-                    $isCorrect = $scoreData['is_correct'] ?? false;
+                    $isCorrect = ($scoreData['is_correct'] ?? 0) == 1;
                     $round = $event->rounds()->find($scoreData['round_id']);
                     
                     $updateData = [

@@ -40,7 +40,7 @@ class SocialiteController extends Controller
             // Log the user in
             Auth::login($user, true);
             
-            return redirect()->intended('/admin');
+            return redirect()->intended('/');
             
         } catch (\Exception $e) {
             // Log the error for debugging

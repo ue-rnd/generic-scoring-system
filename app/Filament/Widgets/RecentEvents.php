@@ -17,12 +17,18 @@ class RecentEvents extends BaseWidget
 
     public function table(Table $table): Table
     {
+        $user = auth()->user();
+        
+        // Build query based on user permissions
+        $query = Event::query()->latest()->limit(5);
+        
+        // Filter by organization for non-super-admins
+        if (!$user->isSuperAdmin()) {
+            $query->whereIn('organization_id', $user->accessibleOrganizationIds());
+        }
+        
         return $table
-            ->query(
-                Event::query()
-                    ->latest()
-                    ->limit(5)
-            )
+            ->query($query)
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()

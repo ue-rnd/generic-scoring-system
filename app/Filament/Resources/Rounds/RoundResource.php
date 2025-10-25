@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class RoundResource extends Resource
 {
@@ -27,6 +28,24 @@ class RoundResource extends Resource
     protected static ?string $pluralModelLabel = 'Rounds';
     
     protected static bool $shouldRegisterNavigation = false;
+    
+    /**
+     * Scope the query to only show rounds from the user's organizations
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        
+        $user = auth()->user();
+        
+        // Super admins can see all rounds
+        if ($user->isSuperAdmin()) {
+            return $query;
+        }
+        
+        // Other users can only see rounds from their organizations
+        return $query->whereIn('organization_id', $user->accessibleOrganizationIds());
+    }
 
     public static function form(Schema $schema): Schema
     {

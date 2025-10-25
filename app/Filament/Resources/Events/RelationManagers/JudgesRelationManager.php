@@ -17,12 +17,22 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class JudgesRelationManager extends RelationManager
 {
     protected static string $relationship = 'judges';
 
     protected static ?string $relatedResource = JudgeResource::class;
+
+    /**
+     * Only show this relation manager for criteria-based events (pageants)
+     * Quiz bee events use centralized admin scoring
+     */
+    public static function canViewForRecord(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): bool
+    {
+        return $ownerRecord->judging_type === 'criteria';
+    }
 
     public function table(Table $table): Table
     {

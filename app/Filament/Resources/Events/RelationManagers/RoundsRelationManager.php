@@ -22,6 +22,14 @@ class RoundsRelationManager extends RelationManager
 
     protected static ?string $relatedResource = RoundResource::class;
 
+    /**
+     * Only show this relation manager for rounds-based events (quiz bees)
+     */
+    public static function canViewForRecord(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): bool
+    {
+        return $ownerRecord->judging_type === 'rounds';
+    }
+
     public function table(Table $table): Table
     {
         return $table

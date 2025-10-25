@@ -19,6 +19,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class EventResource extends Resource
 {
@@ -31,6 +32,24 @@ class EventResource extends Resource
     protected static ?string $modelLabel = 'Event';
     
     protected static ?string $pluralModelLabel = 'Events';
+    
+    /**
+     * Scope the query to only show events from the user's organizations
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        
+        $user = auth()->user();
+        
+        // Super admins can see all events
+        if ($user->isSuperAdmin()) {
+            return $query;
+        }
+        
+        // Other users can only see events from their organizations
+        return $query->whereIn('organization_id', $user->accessibleOrganizationIds());
+    }
     
 
     public static function form(Schema $schema): Schema
@@ -47,6 +66,7 @@ class EventResource extends Resource
     {
         return [
             ContestantsRelationManager::class,
+            // Conditionally show relation managers based on event type
             JudgesRelationManager::class,
             CriteriasRelationManager::class,
             RoundsRelationManager::class,
@@ -60,7 +80,6 @@ class EventResource extends Resource
             'create' => CreateEvent::route('/create'),
             'edit' => EditEvent::route('/{record}/edit'),
             'manage-access' => ManageEventAccess::route('/{record}/manage-access'),
-            'score-quiz-bee' => Pages\ScoreQuizBee::route('/{record}/score-quiz-bee'),
         ];
     }
 }

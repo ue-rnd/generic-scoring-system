@@ -22,6 +22,14 @@ class CriteriasRelationManager extends RelationManager
 
     protected static ?string $relatedResource = CriteriaResource::class;
 
+    /**
+     * Only show this relation manager for criteria-based events (pageants)
+     */
+    public static function canViewForRecord(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): bool
+    {
+        return $ownerRecord->judging_type === 'criteria';
+    }
+
     public function table(Table $table): Table
     {
         return $table

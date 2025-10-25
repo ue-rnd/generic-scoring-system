@@ -34,7 +34,7 @@ class PublicViewController extends Controller
         $judgeSummary = $this->scoringService->getJudgeScoringSummary($event);
         $statistics = $this->getEventStatistics($event);
 
-        return view('public.event', compact(
+        return view('public.scoreboard', compact(
             'event',
             'config',
             'results',
